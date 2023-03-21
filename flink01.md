@@ -37,3 +37,23 @@ Flink 是一个流式的分布式框架，处理有边界或没边界的流数�
 > 
 ### Flink 提交流程图
 ![img_3.png](img_3.png)
+
+### 作业管理器 JobManager
+
+![img_4.png](img_4.png)
+
+![img_5.png](img_5.png)
+
+## TaskManager
+![img_6.png](img_6.png)
+
+
+## Flink 任务提交 session 模式
+
+![img_7.png](img_7.png)
+
+
+## Flink任务提交 per-job 模式
+
+![img_8.png](img_8.png)
+
