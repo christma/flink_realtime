@@ -13,7 +13,7 @@ public class ClickSource2 implements SourceFunction<Event> {
     public void run(SourceContext<Event> sourceContext) throws Exception {
 
         Random random = new Random();
-        String[] users = {"Alice2", "Bob2", "Tom2", "Jack2"};
+        String[] users = {"Alice", "Bob"};
         String[] urls = {"./home2", "./cart2", "./fav2", "./product?id=1002", "./product?id=1002"};
 
 
