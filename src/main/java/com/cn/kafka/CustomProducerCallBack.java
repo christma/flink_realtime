@@ -19,7 +19,7 @@ public class CustomProducerCallBack {
         // 发送数据
         int i = 1;
         while (true){
-            producer.send(new ProducerRecord<>("mock", "hello world " + i++), new Callback() {
+            producer.send(new ProducerRecord<>("twopart", "hello world " + i++), new Callback() {
                 @Override
                 public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                     if (e == null){
@@ -27,7 +27,7 @@ public class CustomProducerCallBack {
                     }
                 }
             });
-            Thread.sleep(100);
+            Thread.sleep(1000);
         }
 
 

@@ -22,8 +22,9 @@ public class CustomProducer {
         // 发送数据
         int i = 1;
         while (true){
-            producer.send(new ProducerRecord<>("mock","hello world " + i++));
-            Thread.sleep(100);
+            producer.send(new ProducerRecord<>("twopart","hello world " + i++));
+            System.out.println("----");
+            Thread.sleep(1000);
         }
     }
 }
