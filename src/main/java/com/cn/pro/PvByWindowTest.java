@@ -3,6 +3,8 @@ package com.cn.pro;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.AggregateFunction;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -36,48 +38,38 @@ public class PvByWindowTest {
                         return Long.valueOf(element.getVisitDateTime());
                     }
                 }));
-        dataStream.keyBy(BehaviorEntity::getUserId)
+        dataStream.keyBy(BehaviorEntity::getDeviceId)
                 .window(TumblingEventTimeWindows.of(Time.minutes(1L)))
-                .aggregate(new MyAgg(), new MyResult())
+                .process(new MyProcessWindowFunction())
                 .print();
 
 
         env.execute("DAUTest");
     }
 
+    private static class MyProcessWindowFunction extends ProcessWindowFunction<BehaviorEntity, outEntity, String, TimeWindow> {
 
-    private static class MyAgg implements AggregateFunction<BehaviorEntity, List<String>, Long> {
+        private final Time step = Time.minutes(1);
+
+        ValueState<Long> pvValueState;
+        ValueState<Long> tsValueState;
+
 
         @Override
-        public List<String> createAccumulator() {
-            return new ArrayList<>();
+        public void open(Configuration parameters) throws Exception {
+            pvValueState = getRuntimeContext().getState(new ValueStateDescriptor<>("pv_value_state", Long.class));
+            tsValueState = getRuntimeContext().getState(new ValueStateDescriptor<>("ts_value_state", Long.class));
         }
 
         @Override
-        public List<String> add(BehaviorEntity value, List<String> accumulator) {
-            accumulator.add(value.getUserId());
-            return accumulator;
-        }
+        public void process(String s, ProcessWindowFunction<BehaviorEntity, outEntity, String, TimeWindow>.Context context, Iterable<BehaviorEntity> elements, Collector<outEntity> out) throws Exception {
 
-        @Override
-        public Long getResult(List<String> accumulator) {
-            return Long.valueOf(accumulator.size());
-        }
-
-        @Override
-        public List<String> merge(List<String> a, List<String> b) {
-            return null;
-        }
-    }
-
-    private static class MyResult extends ProcessWindowFunction<Long, String, String, TimeWindow> {
-
-        @Override
-        public void process(String s, ProcessWindowFunction<Long, String, String, TimeWindow>.Context context, Iterable<Long> elements, Collector<String> out) throws Exception {
-            long start = context.window().getStart();
-            long end = context.window().getEnd();
-            Long uv = elements.iterator().next();
-            out.collect("窗口 " + new Timestamp(start) + " ~ " + new Timestamp(end) + "用户ID: " + s + " UV值为： " + uv);
+            Long count = pvValueState.value();
+            pvValueState.update(count == null ? 1 : count + 1);
+            if(tsValueState.value() == null){
+                long startTime = context.window().getStart();
+                long endTime = context.window().getEnd();
+            }
         }
     }
 }

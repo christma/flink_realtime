@@ -5,12 +5,12 @@ public class BehaviorEntity {
     private String userId;
     private String deviceId;
     private String eventId;
-    private String visitDateTime;
+    private Long visitDateTime;
 
     public BehaviorEntity() {
     }
 
-    public BehaviorEntity(String userId, String deviceId, String eventId, String visitDateTime) {
+    public BehaviorEntity(String userId, String deviceId, String eventId, Long visitDateTime) {
         this.userId = userId;
         this.deviceId = deviceId;
         this.eventId = eventId;
@@ -41,11 +41,11 @@ public class BehaviorEntity {
         this.eventId = eventId;
     }
 
-    public String getVisitDateTime() {
+    public Long getVisitDateTime() {
         return visitDateTime;
     }
 
-    public void setVisitDateTime(String visitDateTime) {
+    public void setVisitDateTime(Long visitDateTime) {
         this.visitDateTime = visitDateTime;
     }
 

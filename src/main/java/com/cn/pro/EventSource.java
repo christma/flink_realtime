@@ -1,7 +1,9 @@
 package com.cn.pro;
 
+import org.apache.flink.api.common.time.Time;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Random;
 
@@ -39,20 +41,25 @@ public class EventSource extends RichSourceFunction<BehaviorEntity> {
     public static String getEventId() {
         // 0 登陆，1点击，2购物车，3下单
         Random random = new Random();
-        return String.valueOf(random.nextInt(3));
+        return String.valueOf(random.nextInt(1));
     }
 
-    public static String getVisitTime() {
-        long currentTimeMillis = System.currentTimeMillis();
-        return String.valueOf(currentTimeMillis);
+    public static Long getVisitTime() {
+        return System.currentTimeMillis();
+
     }
 
-//    public static void main(String[] args) {
-//        for (int i = 0; i < 100; i++) {
-//            System.out.println(getEventId());
-//
-//        }
-//
-//    }
+    public static void main(String[] args) {
+        Time step = Time.minutes(1);
+        System.out.println(step.toMilliseconds());
+        for (int i = 0; i < 10; i++) {
+            Long time = getVisitTime();
+
+            System.out.println(new Timestamp(time));
+            System.out.println(new Timestamp(time / step.toMilliseconds() * step.toMilliseconds()));
+
+        }
+
+    }
 
 }
