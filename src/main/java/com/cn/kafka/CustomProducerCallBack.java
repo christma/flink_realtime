@@ -16,10 +16,11 @@ public class CustomProducerCallBack {
         //创建kafka 生产者对象
         KafkaProducer<String, String> producer = new KafkaProducer<>(prop);
 
+
         // 发送数据
         int i = 1;
         while (true){
-            producer.send(new ProducerRecord<>("testIn", "hello world " + i++), new Callback() {
+            producer.send(new ProducerRecord<>("mock", "hello world " + i++), new Callback() {
                 @Override
                 public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                     if (e == null){
