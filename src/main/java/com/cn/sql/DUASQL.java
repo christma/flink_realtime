@@ -42,30 +42,6 @@ public class DUASQL {
                 "'connector'='print'" +
                 ")";
 
-
-        String test_print = "create table print_table (" +
-                "  `id` BIGINT,\n" +
-                "  `age` BIGINT,\n" +
-                "  `gender` STRING,\n" +
-                "  `os` STRING,\n" +
-                "  `price` BIGINT,\n" +
-                "  `ts` timestamp(3)\n" +
-                ")with(" +
-                "'connector'='print'" +
-                ")";
-
-
-        String test_comp = "insert into print_table \n" +
-                "select \n" +
-                "id,\n" +
-                "age,\n" +
-                "gender,\n" +
-                "os,\n" +
-                "price,\n" +
-                "time_ltz \n" +
-                "from user_log\n";
-
-
         String comp = "insert into print_table " +
                 "    SELECT  \n" +
                 "    window_start \n" +
