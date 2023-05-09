@@ -6,12 +6,9 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -24,14 +21,13 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.sql.Timestamp;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Properties;
 
 public class SkewTest {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
-//        env.setParallelism(3);
-        env.disableOperatorChaining();
+        env.setParallelism(1);
+//        env.disableOperatorChaining();
         Properties prop = new Properties();
         prop.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         prop.put(ConsumerConfig.GROUP_ID_CONFIG, "mock_consumer01");
@@ -41,20 +37,25 @@ public class SkewTest {
 
         FlinkKafkaConsumer<String> kafkaSource = new FlinkKafkaConsumer<>("mock", new SimpleStringSchema(), prop);
 
-        SingleOutputStreamOperator streamSource = env.addSource(kafkaSource).setParallelism(1).map(new splitMap()).setParallelism(1);
+        SingleOutputStreamOperator<OrderInfo> streamSource = env.addSource(kafkaSource)
+                .setParallelism(1)
+                .map(new splitMap())
+                .returns(OrderInfo.class)
+                .setParallelism(1);
 
-        SingleOutputStreamOperator<OrderInfo> operator = streamSource.assignTimestampsAndWatermarks(WatermarkStrategy.<OrderInfo>forBoundedOutOfOrderness(Duration.ofSeconds(3))
-                .withTimestampAssigner(new SerializableTimestampAssigner<OrderInfo>() {
-                    @Override
-                    public long extractTimestamp(OrderInfo element, long recordTimestamp) {
-                        return element.getTs();
-                    }
-                }));
+        SingleOutputStreamOperator<OrderInfo> operator = streamSource.assignTimestampsAndWatermarks(
+                WatermarkStrategy.<OrderInfo>forBoundedOutOfOrderness(Duration.ofSeconds(3))
+                        .withTimestampAssigner(new SerializableTimestampAssigner<OrderInfo>() {
+                            @Override
+                            public long extractTimestamp(OrderInfo element, long recordTimestamp) {
+                                return element.getTs();
+                            }
+                        })).returns(OrderInfo.class);
 
 
         operator.keyBy(OrderInfo::getId)
                 .window(TumblingEventTimeWindows.of(Time.minutes(1)))
-                .aggregate(new MyAgg(), new PrintResult()).print();
+                .aggregate(new MyAgg(), new PrintResult()).print().setParallelism(1);
 
 
         env.execute("SkewTest");
