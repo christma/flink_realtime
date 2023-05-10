@@ -4,7 +4,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
-public class CumulateWindowSQLTest {
+public class CumulateWindowSQLJoinDimTest {
     public static void main(String[] args) throws Exception {
 
 
@@ -31,37 +31,54 @@ public class CumulateWindowSQLTest {
                 "  'format' = 'json'\n" +
                 ")";
 
-//        String mysql_dim = "";
-
-        String print_sink = "create table print_table (" +
-                "`window_start` timestamp(3)," +
-                "`window_end` timestamp(3)," +
-                " id bigint," +
-                " cn bigint," +
-                " amount bigint " +
+        String mysql_dim = "create table id_dim (" +
+                "`id` int," +
+                "`name` string," +
+                " primary key(id) not enforced " +
                 ")with(" +
                 "'connector'='jdbc',\n" +
                 "'driver' =  'com.mysql.cj.jdbc.Driver'," +
                 "'url'='jdbc:mysql://localhost:3306/d1?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai',\n" +
-                "'table-name'='cumulate_table',\n" +
+                "'table-name'='id_dim',\n" +
                 "'username'='root',\n" +
-                "'password'='root'\n" +
+                "'password'='root'," +
+                "'lookup.cache.max-rows'='10',\n" +
+                "'lookup.cache.ttl'='10s'" +
                 ")";
-
-
+// "'lookup.cache.max-rows'='10',\n" +
+//                "'lookup.cache.ttl'='10'," +
+//                "'lookup.cache.caching-missing-key'='true'" +
 //        String print_sink = "create table print_table (" +
 //                "`window_start` timestamp(3)," +
 //                "`window_end` timestamp(3)," +
 //                " id bigint," +
-//                " amount bigint" +
+//                " cn bigint," +
+//                " amount bigint " +
 //                ")with(" +
-//                "'connector'='print'" +
+//                "'connector'='jdbc',\n" +
+//                "'driver' =  'com.mysql.cj.jdbc.Driver'," +
+//                "'url'='jdbc:mysql://localhost:3306/d1?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai',\n" +
+//                "'table-name'='cumulate_table',\n" +
+//                "'username'='root',\n" +
+//                "'password'='root'\n" +
 //                ")";
 
 
+        String print_sink = "create table print_table (" +
+                " id bigint," +
+                " name string," +
+                " cn bigint," +
+                " amount bigint," +
+                "`window_start` timestamp(3)," +
+                "`window_end` timestamp(3)" +
+                ")with(" +
+                "'connector'='print'" +
+                ")";
+
+
         String comp = " insert into print_table \n" +
-                "SELECT window_end,\n" +
-                "       window_start,\n" +
+                "select tmp.id,name,cn,amount,window_start,window_end from (SELECT window_start,\n" +
+                "       window_end,\n" +
                 "       id,\n" +
                 "       count(id) as cn,\n" +
                 "       sum(price) as amount\n" +
@@ -72,9 +89,10 @@ public class CumulateWindowSQLTest {
                 "    , INTERVAL '5' MINUTE))\n" +
                 "GROUP BY window_start,\n" +
                 "         window_end,\n" +
-                "         id";
+                "         id) tmp left join id_dim d on d.id = tmp.id";
 
 
+        tEnv.executeSql(mysql_dim);
         tEnv.executeSql(kafka_source);
         tEnv.executeSql(print_sink);
         tEnv.executeSql(comp);
