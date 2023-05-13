@@ -31,49 +31,67 @@ public class CumulateWindowSQLJoinDimTest {
                 "  'format' = 'json'\n" +
                 ")";
 
+
         String mysql_dim = "create table id_dim (" +
                 "`id` int," +
                 "`name` string," +
                 " primary key(id) not enforced " +
                 ")with(" +
-                "'connector'='jdbc',\n" +
-                "'driver' =  'com.mysql.cj.jdbc.Driver'," +
-                "'url'='jdbc:mysql://localhost:3306/d1?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai',\n" +
-                "'table-name'='id_dim',\n" +
+                "'connector'='mysql-cdc',\n" +
+                "'hostname'= 'localhost'," +
+                "'port'='3306',\n" +
                 "'username'='root',\n" +
                 "'password'='root'," +
-                "'lookup.cache.max-rows'='10',\n" +
-                "'lookup.cache.ttl'='10s'" +
+                "'database-name'='d1',\n" +
+                "'table-name'='id_dim'" +
                 ")";
-// "'lookup.cache.max-rows'='10',\n" +
-//                "'lookup.cache.ttl'='10'," +
-//                "'lookup.cache.caching-missing-key'='true'" +
-//        String print_sink = "create table print_table (" +
-//                "`window_start` timestamp(3)," +
-//                "`window_end` timestamp(3)," +
-//                " id bigint," +
-//                " cn bigint," +
-//                " amount bigint " +
+
+//        String mysql_dim = "create table id_dim (" +
+//                "`id` int," +
+//                "`name` string," +
+//                " primary key(id) not enforced " +
 //                ")with(" +
 //                "'connector'='jdbc',\n" +
 //                "'driver' =  'com.mysql.cj.jdbc.Driver'," +
 //                "'url'='jdbc:mysql://localhost:3306/d1?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai',\n" +
-//                "'table-name'='cumulate_table',\n" +
+//                "'table-name'='id_dim',\n" +
 //                "'username'='root',\n" +
-//                "'password'='root'\n" +
+//                "'password'='root'," +
+//                "'lookup.cache.max-rows'='-1',\n" +
+//                "'lookup.cache.ttl'='500ms'" +
 //                ")";
 
-
+// "'lookup.cache.max-rows'='10',\n" +
+//                "'lookup.cache.ttl'='10'," +
+//                "'lookup.cache.caching-missing-key'='true'" +
         String print_sink = "create table print_table (" +
                 " id bigint," +
                 " name string," +
                 " cn bigint," +
                 " amount bigint," +
                 "`window_start` timestamp(3)," +
-                "`window_end` timestamp(3)" +
+                "`window_end` timestamp(3)," +
+                " primary key(id,window_start,window_end) not enforced " +
                 ")with(" +
-                "'connector'='print'" +
+                "'connector'='jdbc',\n" +
+                "'driver' =  'com.mysql.cj.jdbc.Driver'," +
+                "'url'='jdbc:mysql://localhost:3306/d1?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai',\n" +
+                "'table-name'='cumulate_table',\n" +
+                "'username'='root',\n" +
+                "'password'='root'\n" +
                 ")";
+
+//
+//        String print_sink = "create table print_table (" +
+//                " id bigint," +
+//                " name string," +
+//                " cn bigint," +
+//                " amount bigint," +
+//                "`window_start` timestamp(3)," +
+//                "`window_end` timestamp(3)" +
+//                ")with(" +
+//                "'connector'='print'" +
+//                ")";
 
 
         String comp = " insert into print_table \n" +
