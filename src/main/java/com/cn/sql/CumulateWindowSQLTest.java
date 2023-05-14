@@ -1,17 +1,33 @@
 package com.cn.sql;
 
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.runtime.state.filesystem.FsStateBackend;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
+import org.apache.hadoop.fs.FileSystem;
 
 public class CumulateWindowSQLTest {
     public static void main(String[] args) throws Exception {
 
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(new Configuration());
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
         env.setParallelism(1);
         env.disableOperatorChaining();
-        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
+        // 设置checkpoint的执行周期
+        env.enableCheckpointing(6000);
+        // 设置checkpoint成功后，间隔多久发起下一次checkpoint
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(6000);
+        // 设置checkpoint的超时时间
+        env.getCheckpointConfig().setCheckpointTimeout(8000);
+        // 设置flink任务被手动取消时，将最近一次成功的checkpoint数据保存到savepoint中，以便下次启动时，从该状态中恢复
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        // 设置状态后端,视情况而定，生产上一般使用RocksDB作为状态后端存储状态信息
+        env.setStateBackend(new FsStateBackend("hdfs://localhost:9000/flink/checkpoints", true));
+
 
         String kafka_source = "CREATE TABLE user_log (\n" +
                 "  `id` BIGINT,\n" +
