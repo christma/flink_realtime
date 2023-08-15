@@ -1,6 +1,5 @@
 package com.cn.base;
 
-import javafx.beans.property.SimpleStringProperty;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;

@@ -20,15 +20,16 @@ public class CustomProducerCallBack {
         // 发送数据
         int i = 1;
         while (true){
+            int finalI = i;
             producer.send(new ProducerRecord<>("mock", "hello world " + i++), new Callback() {
                 @Override
                 public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                     if (e == null){
-                        System.out.println(recordMetadata.partition()+"  "+ recordMetadata.offset());
+                        System.out.println(recordMetadata.partition()+"  "+ recordMetadata.offset() +" hello world "+ finalI);
                     }
                 }
             });
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         }
 
 
